@@ -8,6 +8,7 @@ public class Ex2Sheet implements Sheet {
     private Cell[][] table;
     private int[][] depthArray;
 
+
     // Constructor initializing the sheet with specified dimensions
     public Ex2Sheet(int x, int y) {
         table = new SCell[x][y];
