@@ -1,6 +1,5 @@
-// Add your documentation below:
 
-import static jdk.internal.org.jline.utils.Colors.s;
+// Add your documentation below:
 
 public class SCell implements Cell {
     private String line;// donne dans la cellule ("123" ou "=A1+B1")
@@ -10,7 +9,18 @@ public class SCell implements Cell {
 
     public SCell(String s) {
         // Add your code here
+        setData(s);
+        if (isNumber(s)) {
+            setType(Ex2Utils.NUMBER); // Si c'est un nombre.
+        } else if (isForm(s)) {
+            setType(Ex2Utils.FORM); // Si c'est une formule valide.
+        } else if (isText(s)) {
+            setType(Ex2Utils.TEXT); // Si c'est du texte.
+        } else {
+            setType(Ex2Utils.ERR_FORM_FORMAT); // Si c'est une erreur.
+        }
     }
+
 
     @Override
     public int getOrder() {
@@ -20,44 +30,38 @@ public class SCell implements Cell {
 
 
 
-    //@Override
     @Override
     public String toString() {
-
         return getData();
     }
 
+
+
     @Override
     public void setData(String s) {
-        this.data = s; // Met à jour les données de la cellule
-
+        line = s; // Met à jour la ligne
         // Déterminer le type de la cellule en utilisant les méthodes appropriées
         if (isNumber(s)) {
-            this.type = Ex2Utils.NUMBER ; // Définit le type comme IS_NUMBER
+            setType( Ex2Utils.NUMBER ); // Définit le type comme IS_NUMBER
         } else if (isForm(s)) {
-            this.type = Ex2Utils.FORM ; // Définit le type comme FORM
+            System.out.println("INSIDE FORM SECTION");
+            System.out.println("FORM= " + Ex2Utils.FORM);
+            setType(Ex2Utils.FORM) ; // Définit le type comme FORM
         } else if (isText(s)) {
-            this.type = Ex2Utils.TEXT; // Définit le type comme TEXT
+            setType(Ex2Utils.TEXT); // Définit le type comme TEXT
         } else {
-            this.type = Ex2Utils.ERR_FORM_FORMAT; // Définit le type en cas d'erreur (par exemple, si c'est vide)
+            setType(Ex2Utils.ERR_FORM_FORMAT); // Définit le type en cas d'erreur (par exemple, si c'est vide)
         }
     }
 
 
     @Override
     public String getData() {
-        this.line = String.valueOf(s);
-        if (isNumber(String.valueOf(s))) {
-            setType(Ex2Utils.NUMBER);
-        } else if (isText(String.valueOf(s))) {
-            setType(Ex2Utils.TEXT);
-        } else if (isForm(String.valueOf(s))) {
-            setType(Ex2Utils.FORM);
-        } else {
-            setType(Ex2Utils.ERR_FORM_FORMAT); // Si aucun type ne correspond
-        }
         return line;
+        //add your code
     }
+
+
 
     @Override
     public int getType() {
@@ -68,16 +72,33 @@ public class SCell implements Cell {
     @Override
     public void setType(int t) {
         type = t;
+        if (type == Ex2Utils.NUMBER) {
+            order = Ex2Utils.NUMBER;
+        }
+        if (type == Ex2Utils.FORM) {
+            order = Ex2Utils.FORM;
+        }
+        if (type == Ex2Utils.TEXT) {
+            order = Ex2Utils.TEXT;
+        }
+        if (type == Ex2Utils.ERR_FORM_FORMAT) {
+            order = Ex2Utils.ERR_FORM_FORMAT;
+        }
     }
 
     @Override
     public void setOrder(int t) {
         // Add your code here
+        this.order = t;
 
     }
 
     // ne pas changer le prof a dit c bon isNumber, isText
     public boolean isNumber(String text) {// je verifie sir une chaine de caracter text represente un nombre valid
+        // Vérifie si la chaîne est null ou vide
+        if (text == null || text.trim().isEmpty()) {
+            return false; // Retourne false si c'est null ou vide
+        }
         try {
             Double.parseDouble(text); // essaye  de convertir text en un nombre
             return true;// true si sa marche , c un nombre
@@ -86,80 +107,76 @@ public class SCell implements Cell {
         }
     }
 
-    public boolean isText(String text) {// sa verifie si la chaine est ni un nombre ni une formule , mais un texte
-        return !isNumber(text) && !text.startsWith("=");// return true si la chaine nest pas un nombre (isNumber(text) est faux
-        // && si elle ne commence pas par un "=" cad nest pas une formule
+    public boolean isText(String text) {
+        // Une chaîne vide ou null est considérée comme un texte (dépend du contexte attendu)
+        if (text == null || text.trim().isEmpty()) {
+            return false; // Considérez les chaînes vides comme du texte
+        }
+        // Retourne true si la chaîne n'est ni un nombre ni une formule
+        return !isNumber(text) && !text.startsWith("=");
     }
+
 
     // refaire le isForm avec boucle true et false ( si je suis vide dans des parenthese , vide ou null , : soit vrai soit faux directemtn )
-//verifie si la chaine est une formule vrai
-    public boolean isForm(String text) {
-        if (text == null || text.isEmpty()) { // chaine nul ou vide
+    public static boolean isForm(String text) {
+        // Vérifie si la formule commence par '='
+        if (text == null || !text.startsWith("=")) {
             return false;
         }
-        if (text.startsWith("=")) { // commence par = alors c true
-            return true;
-        }
-        if (!text.startsWith("=")) { // commence pas par = alors c false
+
+        // Supprime le '=' pour analyser le reste
+        text = text.substring(1);
+
+        // Vérifie si les parenthèses sont équilibrées
+        if (!areParenthesesBalanced(text)) {
             return false;
         }
-        String formulaContent = text.substring(1);
-        char[] chars = formulaContent.toCharArray();// nous aide a verifie chaque caracter 1 a 1
-        int openParens = 0;
-        for (char c : chars) {
-            if (Character.isDigit(c) || c == '+' || c == '-' || c == '*' || c == '/' || c == '(' || c == ')') {// tous les caracteres autorise dans la formule
-                if (c == '(') {
-                    openParens++;
-                } else if (c == ')') {
-                    openParens--;
-                }
-                if (openParens < 0) { // compte si le nombre de parenthese est bon des deux cotee
-                    return false;
-                } else {
-                    return true;
-                }
-            }
+
+        // Vérifie les opérateurs et la syntaxe générale
+        if (!isValidSyntax(text)) {
+            return false;
         }
-        return openParens == 0;
+
+        return true;
     }
 
-    public Double computeForm(String form) {
-        if(form == null || form.isEmpty() || !isNumber(form)) {
-            System.out.println("invalid form: "+form);
-        }
-        String formulaContent = form.substring(1);//retire le = pour ne garder que la formule
-        char[] chars = formulaContent.toCharArray();//converti le tout en tableau de character
-        double result = 0;// resultat temporaire
-        double currentNumber = 0;
-        char currentOp = '+';
-        for (int i = 0; i<chars.length;i++){
-            char c = chars[i];
-            if(Character.isDigit(c)) {
-                currentNumber = currentNumber*10 + (c- '0');
-            }
-            if ((!Character.isDigit(c) && c != ' ') || i== chars.length -1){
-        switch (currentOp){
-            case '+':
-                result += currentNumber;
-                break;
-                case '-':
-                    result -= currentNumber;
-                    break;
-                    case '*':
-                        result *= currentNumber;
-                        break;
-                        case '/':
-                            if (currentNumber ==0 ){// verfie si le nmb est 0 pour ne pas diviser par 0
-                                throw new ArithmeticException("Division by zero");
-                            }
-                            result /= currentNumber;
-                            break;
-        }
-        currentOp = c; // met a jour loperateur
-        currentNumber = 0; // reinitialise le nombre
+    // Vérifie si les parenthèses sont équilibrées
+    private static boolean areParenthesesBalanced(String formula) {
+        int count = 0;
+
+        for (char c : formula.toCharArray()) {
+            if (c == '(') {
+                count++;
+            } else if (c == ')') {
+                count--;
+                if (count < 0) {
+                    return false; // Une parenthèse fermante avant une ouvrante
+                }
             }
         }
-        return result;
+
+        return count == 0;
+    }
+
+    // Vérifie la validité des opérateurs et de la syntaxe générale
+    private static boolean isValidSyntax(String formula) {
+        // Vérifie qu'il n'y a pas deux opérateurs consécutifs
+        String[] invalidPatterns = { "\\+\\+", "--", "\\*\\*", "//", "\\+\\-", "\\-\\+", "\\+\\*", "\\*\\+", "/\\+", "\\+/"};
+        for (String pattern : invalidPatterns) {
+            if (formula.contains(pattern)) {
+                return false;
+            }
+        }
+
+        // Vérifie qu'il n'y a pas d'opérateur au début ou à la fin
+        if (formula.matches("^[+\\-*/].*") || formula.matches(".*[+\\-*/]$")) {
+            return false;
+        }
+
+        return true;
     }
 }
+
+
+
 
