@@ -8,7 +8,6 @@ public class Ex2Sheet implements Sheet {
     private Cell[][] table;
     private int[][] depthArray;
 
-
     // Constructor initializing the sheet with specified dimensions
     public Ex2Sheet(int x, int y) {
         table = new SCell[x][y];
@@ -48,27 +47,25 @@ public class Ex2Sheet implements Sheet {
         return table[x][y];
     }
 
-    // Returns the cell object by string coordinates (e.g., "A1")
     @Override
     public Cell get(String cords) {
-        Cell ans = null;
         if (cords == null || cords.length() < 2) {
-            return ans;
+            return null;
         }
 
         char columnChar = cords.charAt(0);
         if (isChar(columnChar)) {
             try {
-                int x = columnChar - 'A';
-                int y = Integer.parseInt(cords.substring(1));
+                int x = columnChar - 'A'; // Convert column 'A', 'B', etc. to index
+                int y = Integer.parseInt(cords.substring(1)); // Parse row index
                 if (isIn(x, y)) {
-                    ans = table[x][y];
+                    return table[x][y];
                 }
             } catch (NumberFormatException e) {
                 return null;
             }
         }
-        return ans;
+        return null;
     }
 
     // Checks if a character represents a valid column
@@ -253,6 +250,7 @@ public class Ex2Sheet implements Sheet {
             }
         }
     }
+
     // Evaluates a single cell
     @Override
     public String eval(int x, int y) {
@@ -274,7 +272,7 @@ public class Ex2Sheet implements Sheet {
         }
     }
 
-    // Computes the result of a formula
+    // Processes a formula string and computes its value
     public String computeForm(String formula) {
         if (!formula.startsWith("=")) {
             return formula;
@@ -282,6 +280,10 @@ public class Ex2Sheet implements Sheet {
 
         try {
             String processed = formula.substring(1).trim();
+            if (processed.startsWith("-")) {
+                processed = "0" + processed;
+            }
+
             StringBuilder result = new StringBuilder();
             int i = 0;
 
@@ -296,16 +298,23 @@ public class Ex2Sheet implements Sheet {
                     Cell referencedCell = get(cellRef);
 
                     if (referencedCell == null) {
-                        return formula;
+                        return "#ERROR";
                     }
 
                     String value = referencedCell.getData();
+                    if (value == null || value.isEmpty()) {
+                        return "#ERROR";
+                    }
+
+                    if (value.startsWith("=")) {
+                        value = computeForm(value); // Recursive evaluation
+                    }
 
                     try {
-                        Double.parseDouble(value);
+                        Double.parseDouble(value); // Validate if value is numeric
                         result.append(value);
                     } catch (NumberFormatException e) {
-                        return "#ERROR2";
+                        return "#ERROR";
                     }
                 } else {
                     result.append(processed.charAt(i));
@@ -315,7 +324,7 @@ public class Ex2Sheet implements Sheet {
 
             return evaluateExpression(result.toString());
         } catch (Exception e) {
-            return "#ERROR3";
+            return "#ERROR";
         }
     }
 
@@ -325,45 +334,62 @@ public class Ex2Sheet implements Sheet {
             expr = expr.replace(" ", "");
             if (expr.isEmpty()) return "0";
 
-            double result = 0;
-            double currentNum = 0;
-            char operation = '+';
-
-            for (int i = 0; i < expr.length(); i++) {
-                char currentChar = expr.charAt(i);
-
-                if (Character.isDigit(currentChar) || currentChar == '.') {
-                    StringBuilder numStr = new StringBuilder();
-                    while (i < expr.length() && (Character.isDigit(expr.charAt(i)) || expr.charAt(i) == '.')) {
-                        numStr.append(expr.charAt(i));
-                        i++;
-                    }
-                    i--;
-                    currentNum = Double.parseDouble(numStr.toString());
-                } else if (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/') {
-                    result = performOperation(result, currentNum, operation);
-                    operation = currentChar;
-                    currentNum = 0;
-                }
-            }
-
-            result = performOperation(result, currentNum, operation);
-            return String.valueOf(result);
+            return String.valueOf(evaluate(expr));
         } catch (Exception e) {
             return "#ERROR";
         }
     }
 
-    // Performs a basic mathematical operation
-    private double performOperation(double result, double num, char operation) {
-        switch (operation) {
-            case '+': return result + num;
-            case '-': return result - num;
-            case '*': return result * num;
-            case '/':
-                if (num == 0) throw new ArithmeticException("Division by zero");
-                return result / num;
-            default: throw new IllegalArgumentException("Invalid operator");
+    private double evaluate(String expr) {
+        // Handle parentheses
+        while (expr.contains("(")) {
+            int start = expr.lastIndexOf('(');
+            int end = expr.indexOf(')', start);
+            if (end == -1) throw new IllegalArgumentException("Mismatched parentheses");
+
+            String innerExpression = expr.substring(start + 1, end);
+            double innerResult = evaluate(innerExpression);
+            expr = expr.substring(0, start) + innerResult + expr.substring(end + 1);
         }
+
+        // Split and evaluate by precedence: *, / first, then +, -
+        return evaluateAdditionAndSubtraction(expr);
+    }
+
+    private double evaluateAdditionAndSubtraction(String expr) {
+        String[] terms = expr.split("(?=[+-])|(?<=[+-])");
+        double result = 0;
+        boolean add = true;
+
+        for (String term : terms) {
+            if (term.equals("+")) {
+                add = true;
+            } else if (term.equals("-")) {
+                add = false;
+            } else {
+                double value = evaluateMultiplicationAndDivision(term);
+                result = add ? result + value : result - value;
+            }
+        }
+
+        return result;
+    }
+
+    private double evaluateMultiplicationAndDivision(String expr) {
+        String[] factors = expr.split("(?=[*/])|(?<=[*/])");
+        double result = Double.parseDouble(factors[0]);
+
+        for (int i = 1; i < factors.length; i += 2) {
+            char operator = factors[i].charAt(0);
+            double value = Double.parseDouble(factors[i + 1]);
+
+            if (operator == '*') {
+                result *= value;
+            } else if (operator == '/') {
+                result /= value;
+            }
+        }
+
+        return result;
     }
 }

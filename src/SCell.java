@@ -1,182 +1,152 @@
-
-// Add your documentation below:
-
 public class SCell implements Cell {
-    private String line;// donne dans la cellule ("123" ou "=A1+B1")
-    private int type;// type de la cellule (nombre , texte , formule , erreur)
-    private int order; // ordre de calcul
+    private String line;
+    private int type;
+    private int order;
     private String data;
 
+    // Constructor to initialize a cell with a given value
     public SCell(String s) {
-        // Add your code here
         setData(s);
         if (isNumber(s)) {
-            setType(Ex2Utils.NUMBER); // Si c'est un nombre.
+            setType(Ex2Utils.NUMBER);
         } else if (isForm(s)) {
-            setType(Ex2Utils.FORM); // Si c'est une formule valide.
+            setType(Ex2Utils.FORM);
         } else if (isText(s)) {
-            setType(Ex2Utils.TEXT); // Si c'est du texte.
+            setType(Ex2Utils.TEXT);
         } else {
-            setType(Ex2Utils.ERR_FORM_FORMAT); // Si c'est une erreur.
+            setType(Ex2Utils.ERR_FORM_FORMAT);
         }
     }
 
-
+    // Returns the calculation order of the cell
     @Override
     public int getOrder() {
-        //add your code
-        return this.order; // Retourne l'ordre de calcul actuel
+        return this.order;
     }
 
-
-
+    // Returns the string representation of the cell
     @Override
     public String toString() {
         return getData();
     }
 
-
-
+    // Sets the data for the cell and determines its type
     @Override
     public void setData(String s) {
-        line = s; // Met à jour la ligne
-        // Déterminer le type de la cellule en utilisant les méthodes appropriées
+        line = s;
         if (isNumber(s)) {
-            setType( Ex2Utils.NUMBER ); // Définit le type comme IS_NUMBER
+            setType(Ex2Utils.NUMBER);
         } else if (isForm(s)) {
-            System.out.println("INSIDE FORM SECTION");
-            System.out.println("FORM= " + Ex2Utils.FORM);
-            setType(Ex2Utils.FORM) ; // Définit le type comme FORM
+            setType(Ex2Utils.FORM);
         } else if (isText(s)) {
-            setType(Ex2Utils.TEXT); // Définit le type comme TEXT
+            setType(Ex2Utils.TEXT);
         } else {
-            setType(Ex2Utils.ERR_FORM_FORMAT); // Définit le type en cas d'erreur (par exemple, si c'est vide)
+            setType(Ex2Utils.ERR_FORM_FORMAT);
         }
     }
 
-
+    // Returns the current data of the cell
     @Override
     public String getData() {
         return line;
-        //add your code
     }
 
-
-
+    // Returns the type of the cell
     @Override
     public int getType() {
-
         return type;
     }
 
+    // Sets the type of the cell and adjusts the calculation order
     @Override
     public void setType(int t) {
         type = t;
         if (type == Ex2Utils.NUMBER) {
             order = Ex2Utils.NUMBER;
-        }
-        if (type == Ex2Utils.FORM) {
+        } else if (type == Ex2Utils.FORM) {
             order = Ex2Utils.FORM;
-        }
-        if (type == Ex2Utils.TEXT) {
+        } else if (type == Ex2Utils.TEXT) {
             order = Ex2Utils.TEXT;
-        }
-        if (type == Ex2Utils.ERR_FORM_FORMAT) {
+        } else if (type == Ex2Utils.ERR_FORM_FORMAT) {
             order = Ex2Utils.ERR_FORM_FORMAT;
         }
     }
 
+    // Sets the calculation order of the cell
     @Override
     public void setOrder(int t) {
-        // Add your code here
         this.order = t;
-
     }
 
-    // ne pas changer le prof a dit c bon isNumber, isText
-    public boolean isNumber(String text) {// je verifie sir une chaine de caracter text represente un nombre valid
-        // Vérifie si la chaîne est null ou vide
+    // Checks if the provided string represents a valid number
+    public boolean isNumber(String text) {
         if (text == null || text.trim().isEmpty()) {
-            return false; // Retourne false si c'est null ou vide
+            return false;
         }
         try {
-            Double.parseDouble(text); // essaye  de convertir text en un nombre
-            return true;// true si sa marche , c un nombre
+            Double.parseDouble(text);
+            return true;
         } catch (NumberFormatException e) {
-            return false;// si sa marche pas, c pas un nombre
+            return false;
         }
     }
 
+    // Checks if the provided string is valid text
     public boolean isText(String text) {
-        // Une chaîne vide ou null est considérée comme un texte (dépend du contexte attendu)
         if (text == null || text.trim().isEmpty()) {
-            return false; // Considérez les chaînes vides comme du texte
+            return false;
         }
-        // Retourne true si la chaîne n'est ni un nombre ni une formule
         return !isNumber(text) && !text.startsWith("=");
     }
 
-
-    // refaire le isForm avec boucle true et false ( si je suis vide dans des parenthese , vide ou null , : soit vrai soit faux directemtn )
+    // Checks if the provided string is a valid formula
     public static boolean isForm(String text) {
-        // Vérifie si la formule commence par '='
         if (text == null || !text.startsWith("=")) {
             return false;
         }
-
-        // Supprime le '=' pour analyser le reste
         text = text.substring(1);
-
-        // Vérifie si les parenthèses sont équilibrées
         if (!areParenthesesBalanced(text)) {
             return false;
         }
-
-        // Vérifie les opérateurs et la syntaxe générale
-        if (!isValidSyntax(text)) {
-            return false;
-        }
-
-        return true;
+        return isValidSyntax(text);
     }
 
-    // Vérifie si les parenthèses sont équilibrées
+    // Checks if parentheses in a formula are balanced
     private static boolean areParenthesesBalanced(String formula) {
         int count = 0;
-
         for (char c : formula.toCharArray()) {
             if (c == '(') {
                 count++;
             } else if (c == ')') {
                 count--;
                 if (count < 0) {
-                    return false; // Une parenthèse fermante avant une ouvrante
+                    return false;
                 }
             }
         }
-
         return count == 0;
     }
 
-    // Vérifie la validité des opérateurs et de la syntaxe générale
+    // Checks if the formula syntax is valid
     private static boolean isValidSyntax(String formula) {
-        // Vérifie qu'il n'y a pas deux opérateurs consécutifs
-        String[] invalidPatterns = { "\\+\\+", "--", "\\*\\*", "//", "\\+\\-", "\\-\\+", "\\+\\*", "\\*\\+", "/\\+", "\\+/"};
+        // Vérifie les motifs invalides, comme les opérateurs consécutifs
+        String[] invalidPatterns = {
+                "\\+\\+", "--", "\\*\\*", "//", "\\+\\-", "\\-\\+", "\\+\\*", "\\*\\+", "/\\+", "\\+/"
+        };
+
+        // Vérifie si la formule contient un motif invalide
         for (String pattern : invalidPatterns) {
-            if (formula.contains(pattern)) {
+            if (formula.matches(".*" + pattern + ".*")) { // Utilisation de regex pour rechercher le motif
                 return false;
             }
         }
 
-        // Vérifie qu'il n'y a pas d'opérateur au début ou à la fin
+        // Vérifie si la formule commence ou se termine par un opérateur
         if (formula.matches("^[+\\-*/].*") || formula.matches(".*[+\\-*/]$")) {
             return false;
         }
 
         return true;
     }
+
 }
-
-
-
-
