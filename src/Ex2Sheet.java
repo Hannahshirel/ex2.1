@@ -374,7 +374,7 @@ public class Ex2Sheet implements Sheet {
     private double evaluateMultiplicationAndDivision(String expr) {
         String[] factors = expr.split("(?=[*/])|(?<=[*/])");
         double result = Double.parseDouble(factors[0]);
-
+//test
         for (int i = 1; i < factors.length; i += 2) {
             char operator = factors[i].charAt(0);
             double value = Double.parseDouble(factors[i + 1]);
