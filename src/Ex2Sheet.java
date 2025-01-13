@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 
+
 public class Ex2Sheet implements Sheet {
     private Cell[][] table;
     private int[][] depthArray;
