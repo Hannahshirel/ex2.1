@@ -4,150 +4,132 @@ public class SCell implements Cell {
     private int order;
     private String data;
 
-    // Constructor to initialize a cell with a given value
     public SCell(String s) {
-        setData(s);
+        setData(s); // Initialize the cell with the provided data
         if (isNumber(s)) {
-            setType(Ex2Utils.NUMBER);
+            setType(Ex2Utils.NUMBER); // Set type to number if the input is numeric
         } else if (isForm(s)) {
-            setType(Ex2Utils.FORM);
+            setType(Ex2Utils.FORM); // Set type to formula if the input starts with '='
         } else if (isText(s)) {
-            setType(Ex2Utils.TEXT);
+            setType(Ex2Utils.TEXT); // Set type to text otherwise
         } else {
-            setType(Ex2Utils.ERR_FORM_FORMAT);
+            setType(Ex2Utils.ERR_FORM_FORMAT); // Mark as an error if none of the above
         }
     }
 
-    // Returns the calculation order of the cell
     @Override
     public int getOrder() {
-        return this.order;
+        return this.order; // Retrieve the computation order of the cell
     }
 
-    // Returns the string representation of the cell
     @Override
     public String toString() {
-        return getData();
+        return getData(); // Convert cell content to a string representation
     }
 
-    // Sets the data for the cell and determines its type
     @Override
     public void setData(String s) {
-        line = s;
+        line = s; // Update the cell's content
         if (isNumber(s)) {
-            setType(Ex2Utils.NUMBER);
+            setType(Ex2Utils.NUMBER); // Set type to number if the input is numeric
         } else if (isForm(s)) {
-            setType(Ex2Utils.FORM);
+            setType(Ex2Utils.FORM); // Set type to formula if the input starts with '='
         } else if (isText(s)) {
-            setType(Ex2Utils.TEXT);
+            setType(Ex2Utils.TEXT); // Set type to text otherwise
         } else {
-            setType(Ex2Utils.ERR_FORM_FORMAT);
+            setType(Ex2Utils.ERR_FORM_FORMAT); // Mark as an error if none of the above
         }
     }
 
-    // Returns the current data of the cell
     @Override
     public String getData() {
-        return line;
+        return line; // Return the content of the cell
     }
 
-    // Returns the type of the cell
     @Override
     public int getType() {
-        return type;
+        return type; // Return the type of the cell
     }
 
-    // Sets the type of the cell and adjusts the calculation order
     @Override
     public void setType(int t) {
-        type = t;
+        type = t; // Set the type of the cell
         if (type == Ex2Utils.NUMBER) {
-            order = Ex2Utils.NUMBER;
+            order = Ex2Utils.NUMBER; // Set computation order for numbers
         } else if (type == Ex2Utils.FORM) {
-            order = Ex2Utils.FORM;
+            order = Ex2Utils.FORM; // Set computation order for formulas
         } else if (type == Ex2Utils.TEXT) {
-            order = Ex2Utils.TEXT;
+            order = Ex2Utils.TEXT; // Set computation order for text
         } else if (type == Ex2Utils.ERR_FORM_FORMAT) {
-            order = Ex2Utils.ERR_FORM_FORMAT;
+            order = Ex2Utils.ERR_FORM_FORMAT; // Set order for error type
         }
     }
 
-    // Sets the calculation order of the cell
     @Override
     public void setOrder(int t) {
-        this.order = t;
+        this.order = t; // Update the computation order of the cell
     }
 
-    // Checks if the provided string represents a valid number
     public boolean isNumber(String text) {
         if (text == null || text.trim().isEmpty()) {
-            return false;
+            return false; // Return false if the string is null or empty
         }
         try {
-            Double.parseDouble(text);
+            Double.parseDouble(text); // Check if the string can be parsed to a number
             return true;
         } catch (NumberFormatException e) {
-            return false;
+            return false; // Return false if parsing fails
         }
     }
 
-    // Checks if the provided string is valid text
     public boolean isText(String text) {
         if (text == null || text.trim().isEmpty()) {
-            return false;
+            return false; // Return false if the string is null or empty
         }
-        return !isNumber(text) && !text.startsWith("=");
+        return !isNumber(text) && !text.startsWith("="); // Check if it's not a number or formula
     }
 
-    // Checks if the provided string is a valid formula
     public static boolean isForm(String text) {
         if (text == null || !text.startsWith("=")) {
-            return false;
+            return false; // Return false if the string doesn't start with '='
         }
-        text = text.substring(1);
+        text = text.substring(1); // Remove the '=' character
         if (!areParenthesesBalanced(text)) {
-            return false;
+            return false; // Check if parentheses are balanced
         }
-        return isValidSyntax(text);
+        return isValidSyntax(text); // Validate the formula syntax
     }
 
-    // Checks if parentheses in a formula are balanced
     private static boolean areParenthesesBalanced(String formula) {
-        int count = 0;
+        int count = 0; // Counter for open and close parentheses
         for (char c : formula.toCharArray()) {
             if (c == '(') {
-                count++;
+                count++; // Increment for open parenthesis
             } else if (c == ')') {
-                count--;
+                count--; // Decrement for close parenthesis
                 if (count < 0) {
-                    return false;
+                    return false; // Return false if close parenthesis exceeds open
                 }
             }
         }
-        return count == 0;
+        return count == 0; // Return true if all parentheses are balanced
     }
 
-    // Checks if the formula syntax is valid
     private static boolean isValidSyntax(String formula) {
-        // Vérifie les motifs invalides, comme les opérateurs consécutifs
         String[] invalidPatterns = {
                 "\\+\\+", "--", "\\*\\*", "//", "\\+\\-", "\\-\\+", "\\+\\*", "\\*\\+", "/\\+", "\\+/"
-        };
+        }; // Define invalid patterns like consecutive operators
 
-        // Vérifie si la formule contient un motif invalide
         for (String pattern : invalidPatterns) {
-            if (formula.matches(".*" + pattern + ".*")) { // Utilisation de regex pour rechercher le motif
-                return false;
+            if (formula.matches(".*" + pattern + ".*")) {
+                return false; // Return false if any invalid pattern is found
             }
         }
 
-        // Vérifie si la formule commence par un opérateur (sauf le cas où elle commence par un "-")
         if (formula.matches("^[+*/].*") || formula.matches(".*[+\\-*/]$")) {
-            return false;
+            return false; // Check for invalid start or end operators
         }
 
-        return true;
+        return true; // Return true if no syntax issues are detected
     }
-
-
 }
