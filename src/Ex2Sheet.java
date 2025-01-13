@@ -261,17 +261,11 @@ public class Ex2Sheet implements Sheet {
             return "";
         }
 
-        switch (cell.getType()) {
-            case Ex2Utils.NUMBER:
-            case Ex2Utils.TEXT:
-                return cell.getData();
-
-            case Ex2Utils.FORM:
-                return computeForm(cell.getData());
-
-            default:
-                return "#ERROR";
-        }
+        return switch (cell.getType()) {
+            case Ex2Utils.NUMBER, Ex2Utils.TEXT -> cell.getData();
+            case Ex2Utils.FORM -> computeForm(cell.getData());
+            default -> "#ERROR";
+        };
     }
 
     // Processes a formula string and computes its value

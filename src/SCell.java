@@ -141,12 +141,13 @@ public class SCell implements Cell {
             }
         }
 
-        // Vérifie si la formule commence ou se termine par un opérateur
-        if (formula.matches("^[+\\-*/].*") || formula.matches(".*[+\\-*/]$")) {
+        // Vérifie si la formule commence par un opérateur (sauf le cas où elle commence par un "-")
+        if (formula.matches("^[+*/].*") || formula.matches(".*[+\\-*/]$")) {
             return false;
         }
 
         return true;
     }
+
 
 }
