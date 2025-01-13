@@ -20,6 +20,7 @@ public class Ex2Sheet implements Sheet {
         eval();
     }
 
+
     // Default constructor using predefined dimensions
     public Ex2Sheet() {
         this(Ex2Utils.WIDTH, Ex2Utils.HEIGHT);
